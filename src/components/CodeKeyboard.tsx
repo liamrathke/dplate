@@ -1,6 +1,6 @@
+import { ChevronDown } from 'lucide-react'
 import { getValidCharsForPosition } from '../data/missions'
 import { cn } from '../lib/utils'
-import { ChevronDown } from 'lucide-react'
 
 const ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -38,27 +38,11 @@ export function CodeKeyboard({ value, onChange, onHide }: CodeKeyboardProps) {
   return (
     <div className="w-full pb-2">
       {/* Display current input + hide button */}
-      <div className="flex items-center justify-between px-2 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            {[0, 1].map((i) => (
-              <div
-                key={i}
-                className={cn(
-                  'w-10 h-12 rounded-lg border-2 flex items-center justify-center text-xl font-bold',
-                  i < value.length
-                    ? 'border-primary bg-primary/20 text-primary'
-                    : i === value.length
-                      ? 'border-primary/50 bg-card'
-                      : 'border-border bg-card'
-                )}
-              >
-                {value[i] || ''}
-              </div>
-            ))}
-          </div>
+      <div className="grid grid-cols-3 items-center px-2 mb-3">
+        <div>
           {value.length > 0 && (
             <button
+              type="button"
               onClick={handleClear}
               className="text-xs text-muted-foreground px-2 py-1 rounded bg-secondary"
             >
@@ -66,18 +50,39 @@ export function CodeKeyboard({ value, onChange, onHide }: CodeKeyboardProps) {
             </button>
           )}
         </div>
-        <button
-          onClick={onHide}
-          className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1.5 rounded-lg bg-secondary active:bg-secondary/80"
-        >
-          <ChevronDown size={14} />
-          Hide
-        </button>
+        <div className="flex gap-1.5 justify-center">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className={cn(
+                'w-10 h-12 rounded-lg border-2 flex items-center justify-center text-xl font-bold',
+                i < value.length
+                  ? 'border-primary bg-primary/20 text-primary'
+                  : i === value.length
+                    ? 'border-primary/50 bg-card'
+                    : 'border-border bg-card',
+              )}
+            >
+              {value[i] || ''}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onHide}
+            className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1.5 rounded-lg bg-secondary active:bg-secondary/80"
+          >
+            <ChevronDown size={14} />
+            Hide
+          </button>
+        </div>
       </div>
 
       {/* Keyboard rows */}
       {ROWS.map((row, rowIdx) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: Fine for now
           key={rowIdx}
           className="flex justify-center gap-[3px] mb-[3px]"
         >
@@ -86,6 +91,7 @@ export function CodeKeyboard({ value, onChange, onHide }: CodeKeyboardProps) {
             const isEnabled = value.length < 2 && validChars.has(key)
             return (
               <button
+                type="button"
                 key={key}
                 onClick={() => handleKey(key)}
                 disabled={!isEnabled}
@@ -93,7 +99,7 @@ export function CodeKeyboard({ value, onChange, onHide }: CodeKeyboardProps) {
                   'h-11 min-w-[32px] flex-1 max-w-[36px] rounded-md text-sm font-semibold transition-colors',
                   isEnabled
                     ? 'bg-card text-foreground active:bg-primary active:text-primary-foreground'
-                    : 'bg-secondary/40 text-muted-foreground/30'
+                    : 'bg-secondary/40 text-muted-foreground/30',
                 )}
               >
                 {key}
@@ -102,10 +108,12 @@ export function CodeKeyboard({ value, onChange, onHide }: CodeKeyboardProps) {
           })}
           {rowIdx === 2 && (
             <button
+              type="button"
               onClick={handleBackspace}
               className="h-11 w-14 rounded-md bg-card text-foreground flex items-center justify-center active:bg-secondary"
             >
               <svg
+                aria-label="Backspace"
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
                 height="20"

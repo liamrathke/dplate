@@ -1,13 +1,13 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { missions } from './data/missions'
-import { useSightings } from './hooks/useSightings'
-import { PlateCard } from './components/PlateCard'
-import { PlateDetail } from './components/PlateDetail'
+import { Keyboard, Menu, Search } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CodeKeyboard } from './components/CodeKeyboard'
 import { DataManagement } from './components/DataManagement'
-import { Menu, Search, Keyboard } from 'lucide-react'
+import { PlateCard } from './components/PlateCard'
+import { PlateDetail } from './components/PlateDetail'
+import { missions } from './data/missions'
+import { useSightings } from './hooks/useSightings'
 import { cn } from './lib/utils'
-import type { MissionEntry, SortMode, SearchMode } from './types'
+import type { MissionEntry, SearchMode, SortMode } from './types'
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'code', label: 'Code' },
@@ -74,15 +74,13 @@ export default function App() {
     let result = [...missions]
 
     if (searchMode === 'code' && codeSearch) {
-      result = result.filter((m) =>
-        m.code.startsWith(codeSearch.toUpperCase())
-      )
+      result = result.filter((m) => m.code.startsWith(codeSearch.toUpperCase()))
     } else if (searchMode === 'mission' && missionSearch) {
       const q = missionSearch.toLowerCase()
       result = result.filter(
         (m) =>
           m.mission.toLowerCase().includes(q) ||
-          m.code.toLowerCase().includes(q)
+          m.code.toLowerCase().includes(q),
       )
     }
 
@@ -126,6 +124,7 @@ export default function App() {
           {seenCount}/{missions.length} spotted
         </p>
         <button
+          type="button"
           onClick={() => setShowDataMgmt(true)}
           className="p-2 rounded-lg bg-card text-muted-foreground active:bg-secondary"
         >
@@ -139,13 +138,14 @@ export default function App() {
           <div className="flex gap-2 flex-1">
             {SORT_OPTIONS.map((opt) => (
               <button
+                type="button"
                 key={opt.value}
                 onClick={() => setSortMode(opt.value)}
                 className={cn(
                   'flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors',
                   sortMode === opt.value
                     ? 'bg-primary/20 text-primary'
-                    : 'bg-card text-muted-foreground'
+                    : 'bg-card text-muted-foreground',
                 )}
               >
                 {opt.label}
@@ -153,12 +153,13 @@ export default function App() {
             ))}
           </div>
           <button
+            type="button"
             onClick={handleSearchIconClick}
             className={cn(
               'shrink-0 px-3 py-2.5 rounded-lg transition-colors',
               searchOpen || isSearchActive
                 ? 'bg-primary/20 text-primary'
-                : 'bg-card text-muted-foreground'
+                : 'bg-card text-muted-foreground',
             )}
           >
             <Search size={16} />
@@ -173,6 +174,7 @@ export default function App() {
           <div className="shrink-0 pb-2">
             <div className="flex gap-1 p-1 bg-card rounded-xl">
               <button
+                type="button"
                 onClick={() => {
                   setSearchMode('code')
                   setMissionSearch('')
@@ -181,13 +183,14 @@ export default function App() {
                   'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                   searchMode === 'code'
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground'
+                    : 'text-muted-foreground',
                 )}
               >
                 <Keyboard size={12} />
                 Code
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setSearchMode('mission')
                   setCodeSearch('')
@@ -196,7 +199,7 @@ export default function App() {
                   'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                   searchMode === 'mission'
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground'
+                    : 'text-muted-foreground',
                 )}
               >
                 <Search size={12} />
@@ -229,6 +232,7 @@ export default function App() {
           </div>
         ) : (
           <div className="space-y-1">
+            <div className="grid grid-cols-1 gap-2">
             {filteredAndSorted.map((entry) => (
               <PlateCard
                 key={entry.code}
@@ -238,6 +242,7 @@ export default function App() {
                 onClick={() => handleCardClick(entry)}
               />
             ))}
+          </div>
           </div>
         )}
       </div>

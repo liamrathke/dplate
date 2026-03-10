@@ -5,14 +5,25 @@ export interface MissionEntry {
   category: Category
 }
 
-export type Category =
-  | 'Africa'
-  | 'Asia'
-  | 'Europe'
-  | 'Americas'
-  | 'Oceania'
-  | 'International'
-  | 'Unknown'
+const AFRICA = 'Africa'
+const ASIA = 'Asia'
+const EUROPE = 'Europe'
+const AMERICAS = 'Americas'
+const OCEANIA = 'Oceania'
+const INTERNATIONAL = 'International'
+const UNKNOWN = 'Unknown'
+
+export type Category = typeof AFRICA | typeof ASIA | typeof EUROPE | typeof AMERICAS | typeof OCEANIA | typeof INTERNATIONAL | typeof UNKNOWN
+
+export const CategoryEnum = {
+  AFRICA,
+  ASIA,
+  EUROPE,
+  AMERICAS,
+  OCEANIA,
+  INTERNATIONAL,
+  UNKNOWN,
+} as const
 
 export interface Sighting {
   date: string

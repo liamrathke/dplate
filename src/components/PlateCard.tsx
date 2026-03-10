@@ -1,6 +1,7 @@
-import type { MissionEntry } from '../types'
-import { cn } from '../lib/utils'
 import { Check } from 'lucide-react'
+import { cn } from '../lib/utils'
+import type { MissionEntry } from '../types'
+import { CategoryLabel } from './CategoryLabel'
 
 interface PlateCardProps {
   entry: MissionEntry
@@ -12,11 +13,12 @@ interface PlateCardProps {
 export function PlateCard({ entry, seen, date, onClick }: PlateCardProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left',
+        'w-full flex items-center gap-2 px-1.5 py-2 rounded-xl transition-colors text-left',
         'active:bg-secondary/80',
-        seen ? 'bg-seen/5' : 'bg-card'
+        seen ? 'bg-seen/5' : 'bg-card',
       )}
     >
       {/* Flag */}
@@ -24,7 +26,9 @@ export function PlateCard({ entry, seen, date, onClick }: PlateCardProps) {
 
       {/* Code + Mission name — larger, fills the row height */}
       <div className="flex-1 min-w-0 flex items-baseline gap-2">
-        <span className="font-mono font-bold text-lg leading-tight shrink-0">{entry.code}</span>
+        <span className="font-mono font-bold text-lg leading-tight shrink-0">
+          {entry.code}
+        </span>
         <span className="text-base font-medium truncate leading-tight">
           {entry.mission}
         </span>
@@ -32,9 +36,7 @@ export function PlateCard({ entry, seen, date, onClick }: PlateCardProps) {
 
       {/* Right side: category badge + date */}
       <div className="shrink-0 flex flex-col items-end gap-1">
-        <span className="text-[11px] px-1.5 py-0.5 m-1 rounded-full bg-secondary text-muted-foreground whitespace-nowrap">
-          {entry.category}
-        </span>
+        <CategoryLabel category={entry.category} compact />
         {seen && date && (
           <span className="text-[11px] text-seen/70">{date}</span>
         )}

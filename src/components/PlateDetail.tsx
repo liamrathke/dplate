@@ -1,20 +1,24 @@
-import { useState, useEffect, useMemo } from 'react'
-import type { MissionEntry, Sighting } from '../types'
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+import { Check, Share2, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { cn } from '../lib/utils'
-import { X, Share2, Check, Trash2 } from 'lucide-react'
-import { PlatePreview } from './PlatePreview'
+import type { MissionEntry, Sighting } from '../types'
+import { CategoryLabel } from './CategoryLabel'
+import { formatPlate, PlatePreview } from './PlatePreview'
 
 const PREFIXES = ['D', 'S', 'C', 'J', 'E'] as const
 type PlateType = 'embassy' | 'un'
 
 function parsePlate(
   plate: string,
-  code: string
+  code: string,
 ): { plateType: PlateType; prefix: string; number: string } {
   if (!plate) return { plateType: 'embassy', prefix: 'D', number: '0001' }
 
   const codeIndex = plate.indexOf(code)
-  if (codeIndex === -1) return { plateType: 'embassy', prefix: 'D', number: '0001' }
+  if (codeIndex === -1)
+    return { plateType: 'embassy', prefix: 'D', number: '0001' }
 
   if (codeIndex <= 1) {
     // Embassy format: prefix + code + number
@@ -47,9 +51,11 @@ export function PlateDetail({
   const parsed = sighting ? parsePlate(sighting.plate, entry.code) : null
 
   const [date, setDate] = useState(
-    sighting?.date || new Date().toISOString().split('T')[0]
+    sighting?.date || new Date().toISOString().split('T')[0],
   )
-  const [plateType, setPlateType] = useState<PlateType>(parsed?.plateType ?? 'embassy')
+  const [plateType, setPlateType] = useState<PlateType>(
+    parsed?.plateType ?? 'embassy',
+  )
   const [prefix, setPrefix] = useState(parsed?.prefix ?? 'D')
   const [number, setNumber] = useState(parsed?.number ?? '0001')
   const isSeen = sighting !== null
@@ -59,13 +65,6 @@ export function PlateDetail({
       return `${prefix}${entry.code}${number}`
     }
     return `${number}${prefix}${entry.code}`
-  }, [plateType, prefix, entry.code, number])
-
-  const displayPlate = useMemo(() => {
-    if (plateType === 'embassy') {
-      return `${prefix} ${entry.code} ${number}`
-    }
-    return `${number} ${prefix} ${entry.code}`
   }, [plateType, prefix, entry.code, number])
 
   // Prevent background scroll
@@ -87,7 +86,7 @@ export function PlateDetail({
   }
 
   const handleShare = async () => {
-    const text = `🚗 Spotted a diplomatic plate! ${entry.emoji} ${entry.code} — ${entry.mission} (${displayPlate})`
+    const text = `🚗 Spotted a diplomatic plate! ${entry.emoji} ${entry.code} — ${entry.mission} (${formatPlate(composedPlate)})`
     if (navigator.share) {
       try {
         await navigator.share({ text })
@@ -120,6 +119,7 @@ export function PlateDetail({
 
         {/* Close button */}
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-full bg-secondary text-muted-foreground"
         >
@@ -130,10 +130,10 @@ export function PlateDetail({
         <div className="flex items-center gap-3 mb-5">
           <span className="text-4xl">{entry.emoji}</span>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold font-mono">
-                {entry.code}
-              </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-2xl font-bold font-mono">{entry.code}</span>
+              <p className="text-muted-foreground text-xl">{entry.mission}</p>
+              <CategoryLabel category={entry.category} />
               {isSeen && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-seen/20 text-seen text-xs font-medium">
                   <Check size={12} />
@@ -141,42 +141,26 @@ export function PlateDetail({
                 </span>
               )}
             </div>
-            <p className="text-muted-foreground text-sm">{entry.mission}</p>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground mt-1 inline-block">
-              {entry.category}
-            </span>
           </div>
         </div>
 
         {/* Form */}
         <div className="space-y-4">
-          {/* Date */}
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">
-              Date Spotted
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
           {/* Plate preview */}
-          <PlatePreview plate={displayPlate} />
+          <PlatePreview plate={composedPlate} />
 
           {/* Embassy / UN toggle */}
           <div className="flex gap-1 p-1 bg-secondary rounded-xl">
             {(['embassy', 'un'] as const).map((type) => (
               <button
+                type="button"
                 key={type}
                 onClick={() => setPlateType(type)}
                 className={cn(
                   'flex-1 py-2 rounded-lg text-xs font-medium transition-colors',
                   plateType === type
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground'
+                    : 'text-muted-foreground',
                 )}
               >
                 {type === 'embassy' ? 'Embassy' : 'UN'}
@@ -185,12 +169,16 @@ export function PlateDetail({
           </div>
 
           {/* Prefix + Number */}
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-3 items-end mb-5">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">
+              <label
+                htmlFor="prefix-select"
+                className="text-sm text-muted-foreground mb-1 block"
+              >
                 Prefix
               </label>
               <select
+                id="prefix-select"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
                 className="h-10 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8"
@@ -208,7 +196,10 @@ export function PlateDetail({
               </select>
             </div>
             <div className="flex-1">
-              <label className="text-sm text-muted-foreground mb-1 block">
+              <label
+                htmlFor="number-input"
+                className="text-sm text-muted-foreground mb-1 block"
+              >
                 Number
               </label>
               <input
@@ -226,19 +217,38 @@ export function PlateDetail({
           </div>
         </div>
 
+                  {/* Date */}
+                  <div>
+            <label
+              htmlFor="date-input"
+              className="text-sm text-muted-foreground mb-1 block"
+            >
+              Date Spotted
+            </label>
+            <input
+              id="date-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full h-11 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
         {/* Actions */}
         <div className="flex gap-2 mt-6">
           <button
+            type="button"
             onClick={handleSave}
             className={cn(
               'flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors',
-              'bg-primary text-primary-foreground active:bg-primary/80'
+              'bg-primary text-primary-foreground active:bg-primary/80',
             )}
           >
             <Check size={18} />
             {isSeen ? 'Update' : 'Mark as Seen'}
           </button>
           <button
+            type="button"
             onClick={handleShare}
             className="h-12 w-12 rounded-xl bg-secondary text-foreground flex items-center justify-center active:bg-secondary/80"
           >
@@ -246,6 +256,7 @@ export function PlateDetail({
           </button>
           {isSeen && (
             <button
+              type="button"
               onClick={handleRemove}
               className="h-12 w-12 rounded-xl bg-destructive/20 text-destructive flex items-center justify-center active:bg-destructive/30"
             >
