@@ -1,7 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { MissionEntry, Sighting } from '../types'
 import { cn } from '../lib/utils'
 import { X, Share2, Check, Trash2 } from 'lucide-react'
+import { PlatePreview } from './PlatePreview'
+
+const PREFIXES = ['D', 'S', 'C', 'J', 'E'] as const
+type PlateType = 'embassy' | 'un'
+
+function parsePlate(
+  plate: string,
+  code: string
+): { plateType: PlateType; prefix: string; number: string } {
+  if (!plate) return { plateType: 'embassy', prefix: 'D', number: '0001' }
+
+  const codeIndex = plate.indexOf(code)
+  if (codeIndex === -1) return { plateType: 'embassy', prefix: 'D', number: '0001' }
+
+  if (codeIndex <= 1) {
+    // Embassy format: prefix + code + number
+    const prefix = plate.substring(0, codeIndex) || 'D'
+    const number = plate.substring(codeIndex + code.length) || '0001'
+    return { plateType: 'embassy', prefix, number }
+  } else {
+    // UN format: number + prefix + code
+    const prefix = plate[codeIndex - 1] || 'D'
+    const number = plate.substring(0, codeIndex - 1) || '0001'
+    return { plateType: 'un', prefix, number }
+  }
+}
 
 interface PlateDetailProps {
   entry: MissionEntry
@@ -18,11 +44,29 @@ export function PlateDetail({
   onMarkSeen,
   onMarkUnseen,
 }: PlateDetailProps) {
+  const parsed = sighting ? parsePlate(sighting.plate, entry.code) : null
+
   const [date, setDate] = useState(
     sighting?.date || new Date().toISOString().split('T')[0]
   )
-  const [plate, setPlate] = useState(sighting?.plate || '')
+  const [plateType, setPlateType] = useState<PlateType>(parsed?.plateType ?? 'embassy')
+  const [prefix, setPrefix] = useState(parsed?.prefix ?? 'D')
+  const [number, setNumber] = useState(parsed?.number ?? '0001')
   const isSeen = sighting !== null
+
+  const composedPlate = useMemo(() => {
+    if (plateType === 'embassy') {
+      return `${prefix}${entry.code}${number}`
+    }
+    return `${number}${prefix}${entry.code}`
+  }, [plateType, prefix, entry.code, number])
+
+  const displayPlate = useMemo(() => {
+    if (plateType === 'embassy') {
+      return `${prefix} ${entry.code} ${number}`
+    }
+    return `${number} ${prefix} ${entry.code}`
+  }, [plateType, prefix, entry.code, number])
 
   // Prevent background scroll
   useEffect(() => {
@@ -33,7 +77,7 @@ export function PlateDetail({
   }, [])
 
   const handleSave = () => {
-    onMarkSeen(entry.code, { date, plate })
+    onMarkSeen(entry.code, { date, plate: composedPlate })
     onClose()
   }
 
@@ -43,7 +87,7 @@ export function PlateDetail({
   }
 
   const handleShare = async () => {
-    const text = `🚗 Spotted a diplomatic plate! ${entry.emoji} ${entry.code} — ${entry.mission}${plate ? ` (${plate})` : ''}`
+    const text = `🚗 Spotted a diplomatic plate! ${entry.emoji} ${entry.code} — ${entry.mission} (${displayPlate})`
     if (navigator.share) {
       try {
         await navigator.share({ text })
@@ -63,7 +107,7 @@ export function PlateDetail({
 
       {/* Sheet */}
       <div
-        className="relative w-full max-w-lg bg-card rounded-t-2xl p-5 pb-8 animate-slide-up"
+        className="relative w-full max-w-lg bg-card rounded-t-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto animate-slide-up"
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'slideUp 0.3s ease-out',
@@ -106,6 +150,7 @@ export function PlateDetail({
 
         {/* Form */}
         <div className="space-y-4">
+          {/* Date */}
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">
               Date Spotted
@@ -117,17 +162,67 @@ export function PlateDetail({
               className="w-full h-11 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">
-              License Plate (optional)
-            </label>
-            <input
-              type="text"
-              value={plate}
-              onChange={(e) => setPlate(e.target.value.toUpperCase())}
-              placeholder="e.g. S AA 1234"
-              className="w-full h-11 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground/50"
-            />
+
+          {/* Plate preview */}
+          <PlatePreview plate={displayPlate} />
+
+          {/* Embassy / UN toggle */}
+          <div className="flex gap-1 p-1 bg-secondary rounded-xl">
+            {(['embassy', 'un'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setPlateType(type)}
+                className={cn(
+                  'flex-1 py-2 rounded-lg text-xs font-medium transition-colors',
+                  plateType === type
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                )}
+              >
+                {type === 'embassy' ? 'Embassy' : 'UN'}
+              </button>
+            ))}
+          </div>
+
+          {/* Prefix + Number */}
+          <div className="flex gap-3 items-end">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">
+                Prefix
+              </label>
+              <select
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value)}
+                className="h-10 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 8px center',
+                }}
+              >
+                {PREFIXES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="text-sm text-muted-foreground mb-1 block">
+                Number
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={number}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                  setNumber(val)
+                }}
+                className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
           </div>
         </div>
 
