@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { cn } from '../lib/utils'
+import { cn, relativeDate } from '../lib/utils'
 import type { MissionEntry } from '../types'
 import { CategoryLabel } from './CategoryLabel'
 
@@ -38,7 +38,7 @@ export function PlateCard({ entry, seen, date, onClick }: PlateCardProps) {
       <div className="shrink-0 flex flex-col items-end gap-1">
         <CategoryLabel category={entry.category} compact />
         {seen && date && (
-          <span className="text-[11px] text-seen/70">{date}</span>
+          <span className="text-[11px] text-seen/70">{relativeDate(date)}</span>
         )}
       </div>
 

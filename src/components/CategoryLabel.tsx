@@ -32,7 +32,7 @@ export function CategoryLabel({
   const label = compact ? COMPACT_LABELS[category] : category
   return (
     <span
-      className="text-[11px] px-2 py-0.5 m-1 rounded-md text-white whitespace-nowrap"
+      className="text-[11px] px-2 py-0.5 m-1 rounded-md text-white whitespace-nowrap font-mono"
       style={{ backgroundColor: LABEL_COLORS[category] }}
     >
       {label}
