@@ -12,6 +12,7 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check --write .",
+    "icons": "node scripts/embed-fonts.mjs && mkdir -p /tmp/icon_render && qlmanage -t -s 512 -o /tmp/icon_render/ public/icon.svg 2>&1 && cp /tmp/icon_render/icon.svg.png public/icon-512.png && sips -z 192 192 public/icon-512.png --out public/icon-192.png",
     "preview": "vite preview"
   },
   "dependencies": {
