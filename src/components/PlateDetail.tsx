@@ -4,7 +4,6 @@ import confetti from 'canvas-confetti'
 import { Check, Share2, Trash2, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { getFlagColors } from '../data/flagColors'
 import { cn } from '../lib/utils'
 import type { MissionEntry, Sighting } from '../types'
 import { CategoryLabel } from './CategoryLabel'
@@ -107,7 +106,7 @@ export function PlateDetail({
         particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
-        colors: getFlagColors(entry.emoji),
+        colors: entry.flagColors,
       })
     }
     onClose()

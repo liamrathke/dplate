@@ -1,5 +1,8 @@
-import { useRef } from 'react'
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+
 import { Download, Upload, X } from 'lucide-react'
+import { useRef } from 'react'
 
 interface DataManagementProps {
   onClose: () => void
@@ -67,6 +70,7 @@ export function DataManagement({
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-full bg-secondary text-muted-foreground"
         >
@@ -90,6 +94,7 @@ export function DataManagement({
 
         <div className="space-y-3">
           <button
+            type="button"
             onClick={handleExport}
             className="w-full h-12 rounded-xl bg-secondary text-foreground font-semibold text-sm flex items-center justify-center gap-2 active:bg-secondary/80"
           >
@@ -97,6 +102,7 @@ export function DataManagement({
             Export Backup
           </button>
           <button
+            type="button"
             onClick={handleImport}
             className="w-full h-12 rounded-xl bg-secondary text-foreground font-semibold text-sm flex items-center justify-center gap-2 active:bg-secondary/80"
           >

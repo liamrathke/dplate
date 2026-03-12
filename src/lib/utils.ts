@@ -8,8 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 export function relativeDate(isoDate: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const d = new Date(isoDate)
-  d.setHours(0, 0, 0, 0)
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
   const days = Math.round((today.getTime() - d.getTime()) / 86400000)
   if (days === 0) return 'Today'
   if (days === 1) return 'Yesterday'

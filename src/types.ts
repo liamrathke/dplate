@@ -3,6 +3,7 @@ export interface MissionEntry {
   mission: string
   emoji: string
   category: Category
+  flagColors: string[]
 }
 
 const AFRICA = 'Africa'
