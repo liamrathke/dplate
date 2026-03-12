@@ -150,38 +150,24 @@ export default function App() {
         </button>
       </header>
 
-      {/* Sort options row + search icon */}
+      {/* Sort options row */}
       <div className="shrink-0 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-2 flex-1">
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                type="button"
-                key={opt.value}
-                onClick={() => setSortMode(opt.value)}
-                className={cn(
-                  'flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors',
-                  sortMode === opt.value
-                    ? 'bg-primary/20 text-primary'
-                    : 'bg-card text-muted-foreground',
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={handleSearchIconClick}
-            className={cn(
-              'shrink-0 px-3 py-2.5 rounded-lg transition-colors',
-              searchOpen || isSearchActive
-                ? 'bg-primary/20 text-primary'
-                : 'bg-card text-muted-foreground',
-            )}
-          >
-            <Search size={16} />
-          </button>
+        <div className="flex gap-2">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              type="button"
+              key={opt.value}
+              onClick={() => setSortMode(opt.value)}
+              className={cn(
+                'flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors',
+                sortMode === opt.value
+                  ? 'bg-primary/20 text-primary'
+                  : 'bg-card text-muted-foreground',
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -231,6 +217,23 @@ export default function App() {
             onHide={handleHideSearch}
           />
         </div>
+      )}
+
+      {/* Floating search button — hidden when code keyboard is open */}
+      {!(searchOpen && searchMode === 'code') && (
+        <button
+          type="button"
+          onClick={handleSearchIconClick}
+          className={cn(
+            'fixed left-4 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors',
+            searchOpen || isSearchActive
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-secondary text-muted-foreground',
+          )}
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+        >
+          <Search size={20} />
+        </button>
       )}
 
       {/* Detail sheet */}

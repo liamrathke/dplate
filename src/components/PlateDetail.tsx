@@ -1,7 +1,10 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+import confetti from 'canvas-confetti'
 import { Check, Share2, Trash2, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { getFlagColors } from '../data/flagColors'
 import { cn } from '../lib/utils'
 import type { MissionEntry, Sighting } from '../types'
 import { CategoryLabel } from './CategoryLabel'
@@ -9,6 +12,14 @@ import { formatPlate, PlatePreview } from './PlatePreview'
 
 const PREFIXES = ['D', 'S', 'C', 'J', 'E'] as const
 type PlateType = 'embassy' | 'un'
+
+interface FormValues {
+  plateType: PlateType
+  prefix: string
+  number: string
+  date: string
+  notes: string
+}
 
 function parsePlate(
   plate: string,
@@ -25,12 +36,11 @@ function parsePlate(
     const prefix = plate.substring(0, codeIndex) || 'D'
     const number = plate.substring(codeIndex + code.length) || '0001'
     return { plateType: 'embassy', prefix, number }
-  } else {
-    // UN format: number + prefix + code
-    const prefix = plate[codeIndex - 1] || 'D'
-    const number = plate.substring(0, codeIndex - 1) || '0001'
-    return { plateType: 'un', prefix, number }
   }
+  // UN format: number + prefix + code
+  const prefix = plate[codeIndex - 1] || 'D'
+  const number = plate.substring(0, codeIndex - 1) || '0001'
+  return { plateType: 'un', prefix, number }
 }
 
 interface PlateDetailProps {
@@ -49,23 +59,30 @@ export function PlateDetail({
   onMarkUnseen,
 }: PlateDetailProps) {
   const parsed = sighting ? parsePlate(sighting.plate, entry.code) : null
-
-  const [date, setDate] = useState(
-    sighting?.date || new Date().toISOString().split('T')[0],
-  )
-  const [plateType, setPlateType] = useState<PlateType>(
-    parsed?.plateType ?? 'embassy',
-  )
-  const [prefix, setPrefix] = useState(parsed?.prefix ?? 'D')
-  const [number, setNumber] = useState(parsed?.number ?? '0001')
   const isSeen = sighting !== null
 
-  const composedPlate = useMemo(() => {
-    if (plateType === 'embassy') {
-      return `${prefix}${entry.code}${number}`
-    }
-    return `${number}${prefix}${entry.code}`
-  }, [plateType, prefix, entry.code, number])
+  const { register, handleSubmit, watch, setValue, control } =
+    useForm<FormValues>({
+      defaultValues: {
+        plateType: parsed?.plateType ?? 'embassy',
+        prefix: parsed?.prefix ?? 'D',
+        number: parsed?.number ?? '0001',
+        date: sighting?.date ?? new Date().toISOString().split('T')[0],
+        notes: sighting?.notes ?? '',
+      },
+    })
+
+  const [plateType, prefix, number, notes] = watch([
+    'plateType',
+    'prefix',
+    'number',
+    'notes',
+  ])
+
+  const composedPlate =
+    plateType === 'embassy'
+      ? `${prefix}${entry.code}${number}`
+      : `${number}${prefix}${entry.code}`
 
   // Prevent background scroll
   useEffect(() => {
@@ -75,8 +92,24 @@ export function PlateDetail({
     }
   }, [])
 
-  const handleSave = () => {
-    onMarkSeen(entry.code, { date, plate: composedPlate })
+  const onSubmit = (data: FormValues) => {
+    const plate =
+      data.plateType === 'embassy'
+        ? `${data.prefix}${entry.code}${data.number}`
+        : `${data.number}${data.prefix}${entry.code}`
+    onMarkSeen(entry.code, {
+      date: data.date,
+      plate,
+      notes: data.notes.trim() || undefined,
+    })
+    if (!isSeen) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: getFlagColors(entry.emoji),
+      })
+    }
     onClose()
   }
 
@@ -105,12 +138,11 @@ export function PlateDetail({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Sheet */}
-      <div
-        className="relative w-full max-w-lg bg-card rounded-t-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto animate-slide-up"
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="relative w-full max-w-lg bg-card rounded-t-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          animation: 'slideUp 0.3s ease-out',
-        }}
+        style={{ animation: 'slideUp 0.3s ease-out' }}
       >
         {/* Handle */}
         <div className="flex justify-center mb-3">
@@ -129,47 +161,51 @@ export function PlateDetail({
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <span className="text-4xl">{entry.emoji}</span>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-2xl font-bold font-mono">{entry.code}</span>
-              <p className="text-muted-foreground text-xl">{entry.mission}</p>
-              <CategoryLabel category={entry.category} />
-              {isSeen && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-seen/20 text-seen text-xs font-medium">
-                  <Check size={12} />
-                  Seen
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-2xl font-bold font-mono">{entry.code}</span>
+            <p className="text-muted-foreground text-xl">{entry.mission}</p>
+            <CategoryLabel category={entry.category} />
+            {isSeen && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-seen/20 text-seen text-xs font-medium">
+                <Check size={12} />
+                Seen
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form fields */}
         <div className="space-y-4">
           {/* Plate preview */}
           <PlatePreview plate={composedPlate} />
 
           {/* Embassy / UN toggle */}
-          <div className="flex gap-1 p-1 bg-secondary rounded-xl">
-            {(['embassy', 'un'] as const).map((type) => (
-              <button
-                type="button"
-                key={type}
-                onClick={() => setPlateType(type)}
-                className={cn(
-                  'flex-1 py-2 rounded-lg text-xs font-medium transition-colors',
-                  plateType === type
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {type === 'embassy' ? 'Embassy' : 'UN'}
-              </button>
-            ))}
-          </div>
+          <Controller
+            name="plateType"
+            control={control}
+            render={({ field }) => (
+              <div className="flex gap-1 p-1 bg-secondary rounded-xl">
+                {(['embassy', 'un'] as const).map((type) => (
+                  <button
+                    type="button"
+                    key={type}
+                    onClick={() => field.onChange(type)}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg text-xs font-medium transition-colors',
+                      field.value === type
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground',
+                    )}
+                  >
+                    {type === 'embassy' ? 'Embassy' : 'UN'}
+                  </button>
+                ))}
+              </div>
+            )}
+          />
 
           {/* Prefix + Number */}
-          <div className="flex gap-3 items-end mb-5">
+          <div className="flex gap-3 items-end">
             <div>
               <label
                 htmlFor="prefix-select"
@@ -179,8 +215,7 @@ export function PlateDetail({
               </label>
               <select
                 id="prefix-select"
-                value={prefix}
-                onChange={(e) => setPrefix(e.target.value)}
+                {...register('prefix')}
                 className="h-10 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
@@ -195,6 +230,7 @@ export function PlateDetail({
                 ))}
               </select>
             </div>
+
             <div className="flex-1">
               <label
                 htmlFor="number-input"
@@ -203,22 +239,22 @@ export function PlateDetail({
                 Number
               </label>
               <input
+                id="number-input"
                 type="text"
                 inputMode="numeric"
-                maxLength={4}
-                value={number}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
-                  setNumber(val)
-                }}
                 className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                {...register('number', {
+                  onChange: (e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                    setValue('number', val, { shouldDirty: true })
+                  },
+                })}
               />
             </div>
           </div>
-        </div>
 
-                  {/* Date */}
-                  <div>
+          {/* Date */}
+          <div>
             <label
               htmlFor="date-input"
               className="text-sm text-muted-foreground mb-1 block"
@@ -228,17 +264,43 @@ export function PlateDetail({
             <input
               id="date-input"
               type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
               className="w-full h-11 px-3 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              {...register('date')}
             />
           </div>
+
+          {/* Notes */}
+          <div>
+            <div className="flex justify-between items-baseline mb-1">
+              <label
+                htmlFor="notes-input"
+                className="text-sm text-muted-foreground"
+              >
+                Notes
+              </label>
+              <span className="text-xs text-muted-foreground/60">
+                {notes.length}/512
+              </span>
+            </div>
+            <textarea
+              id="notes-input"
+              rows={3}
+              maxLength={512}
+              placeholder="Add a note about this sighting…"
+              className="w-full px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none placeholder:text-muted-foreground/50"
+              {...register('notes', {
+                onChange: (e) => {
+                  setValue('notes', e.target.value.slice(0, 512))
+                },
+              })}
+            />
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="flex gap-2 mt-6">
           <button
-            type="button"
-            onClick={handleSave}
+            type="submit"
             className={cn(
               'flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors',
               'bg-primary text-primary-foreground active:bg-primary/80',
@@ -264,7 +326,7 @@ export function PlateDetail({
             </button>
           )}
         </div>
-      </div>
+      </form>
 
       <style>{`
         @keyframes slideUp {

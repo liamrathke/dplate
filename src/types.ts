@@ -28,6 +28,7 @@ export const CategoryEnum = {
 export interface Sighting {
   date: string
   plate: string
+  notes?: string
 }
 
 export type SightingsData = Record<string, Sighting>
