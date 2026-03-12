@@ -34,6 +34,26 @@ export interface Sighting {
 
 export type SightingsData = Record<string, Sighting>
 
-export type SortMode = 'code' | 'mission' | 'category' | 'seen'
+const CODES = 'codes'
+const MISSIONS = 'missions'
+const CONTINENTS = 'continents'
+const SEEN = 'seen'
 
-export type SearchMode = 'code' | 'mission'
+export type SortMode = typeof CODES | typeof MISSIONS | typeof CONTINENTS | typeof SEEN
+
+export const SortModeEnum = {
+  CODES,
+  MISSIONS,
+  CONTINENTS,
+  SEEN,
+} as const
+
+const CODE = 'code'
+const MISSION = 'mission'
+
+export type SearchMode = typeof CODE | typeof MISSION
+
+export const SearchModeEnum = {
+  CODE,
+  MISSION,
+} as const
