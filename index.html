@@ -11,6 +11,16 @@
     <meta name="theme-color" content="#0f172a" />
     <meta name="description" content="Track special license plates" />
     <title>DPlate</title>
+    <script>
+      // Restore sub-path saved by 404.html after a GitHub Pages redirect.
+      (function () {
+        var redirect = sessionStorage.getItem('spa-redirect');
+        if (redirect) {
+          sessionStorage.removeItem('spa-redirect');
+          history.replaceState(null, '', '/dplate' + redirect);
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Brygada+1918:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />

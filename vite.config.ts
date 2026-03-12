@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: './',
+  base: '/dplate/',
   plugins: [
     react(),
     tailwindcss(),
@@ -13,15 +13,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'DPlate - Diplomatic Plate Tracker',
+        name: 'DPlate - Special Plate Trackerr',
         short_name: 'DPlate',
-        description: 'Track diplomatic license plates in the Washington, DC area',
+        description: 'Track special license plates',
         theme_color: '#1e3a5f',
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        scope: './',
-        start_url: './',
+        scope: '/dplate/',
+        start_url: '/dplate/',
         icons: [
           {
             src: 'icon-192.png',

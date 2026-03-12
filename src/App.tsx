@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { SightingsProvider } from './context/SightingsContext'
 import CodesPage from './pages/CodesPage'
@@ -9,10 +9,10 @@ import SeenPage from './pages/SeenPage'
 export default function App() {
   return (
     <SightingsProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/codes" replace />} />
+            <Route index element={<CodesPage />} />
             <Route path="codes" element={<CodesPage />} />
             <Route path="missions" element={<MissionsPage />} />
             <Route path="continents" element={<ContinentsPage />} />

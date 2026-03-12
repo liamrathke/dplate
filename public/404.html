@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // GitHub Pages returns this file for any path it doesn't recognise.
+      // Save the intended sub-path so the app can restore it after loading.
+      var base = '/dplate';
+      var path = window.location.pathname.slice(base.length) || '/';
+      sessionStorage.setItem('spa-redirect', path + window.location.search + window.location.hash);
+      window.location.replace(base + '/');
+    </script>
+  </head>
+</html>
