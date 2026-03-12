@@ -1,4 +1,4 @@
-import { Menu, Search } from 'lucide-react'
+import { ChevronRight, Menu, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CodeKeyboard } from './components/CodeKeyboard'
 import { DataManagement } from './components/DataManagement'
@@ -25,6 +25,16 @@ const CATEGORY_ORDER = [
   'International',
   'Unknown',
 ]
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  Africa: '🌍',
+  Americas: '🌎',
+  Asia: '🌏',
+  Europe: '🌍',
+  Oceania: '🌏',
+  International: '🌐',
+  Unknown: '❓',
+}
 
 export default function App() {
   const {
@@ -118,6 +128,8 @@ export default function App() {
               CATEGORY_ORDER.indexOf(a.category) -
               CATEGORY_ORDER.indexOf(b.category)
             if (catDiff !== 0) return catDiff
+            const missionDiff = a.mission.localeCompare(b.mission)
+            if (missionDiff !== 0) return missionDiff
             return a.code.localeCompare(b.code)
           }
           default:
@@ -128,6 +140,32 @@ export default function App() {
 
     return result
   }, [sortMode, searchMode, codeSearch, missionSearch, isSeen, getSighting])
+
+  const categoryGroups = useMemo(() => {
+    if (sortMode !== 'category') return null
+    const groups: { category: string; entries: MissionEntry[]; seenCountries: number; totalCountries: number }[] = []
+    let currentCategory = ''
+    let currentEntries: MissionEntry[] = []
+
+    for (const entry of filteredAndSorted) {
+      if (entry.category !== currentCategory) {
+        if (currentEntries.length > 0) {
+          const uniqueMissions = new Set(currentEntries.map((e) => e.mission))
+          const seenMissions = new Set(currentEntries.filter((e) => isSeen(e.code)).map((e) => e.mission))
+          groups.push({ category: currentCategory, entries: currentEntries, seenCountries: seenMissions.size, totalCountries: uniqueMissions.size })
+        }
+        currentCategory = entry.category
+        currentEntries = []
+      }
+      currentEntries.push(entry)
+    }
+    if (currentEntries.length > 0) {
+      const uniqueMissions = new Set(currentEntries.map((e) => e.mission))
+      const seenMissions = new Set(currentEntries.filter((e) => isSeen(e.code)).map((e) => e.mission))
+      groups.push({ category: currentCategory, entries: currentEntries, seenCountries: seenMissions.size, totalCountries: uniqueMissions.size })
+    }
+    return groups
+  }, [sortMode, filteredAndSorted, isSeen])
 
   const handleCardClick = useCallback((entry: MissionEntry) => {
     setSelectedEntry(entry)
@@ -193,17 +231,53 @@ export default function App() {
           </div>
         ) : (
           <div className="space-y-1">
-            <div className="grid grid-cols-1 gap-2">
-            {filteredAndSorted.map((entry) => (
-              <PlateCard
-                key={entry.code}
-                entry={entry}
-                seen={isSeen(entry.code)}
-                date={getSighting(entry.code)?.date}
-                onClick={() => handleCardClick(entry)}
-              />
-            ))}
-          </div>
+            {sortMode === 'category' && categoryGroups ? (
+              <div className="space-y-2">
+                {categoryGroups.map((group) => (
+                  <details key={group.category} className="group">
+                    <summary className="flex items-center gap-2.5 px-3 py-4 rounded-xl bg-card cursor-pointer list-none">
+                      <ChevronRight size={18} className="text-muted-foreground shrink-0 transition-transform group-open:rotate-90" />
+                      <span className="text-xl shrink-0">{CATEGORY_EMOJI[group.category] ?? '🌍'}</span>
+                      <span className="font-bold text-base shrink-0">{group.category}</span>
+                      <div className="ml-auto flex items-center gap-2">
+                        <div className="w-[120px] h-1.5 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-seen transition-all"
+                            style={{ width: `${group.totalCountries > 0 ? (group.seenCountries / group.totalCountries) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-10 text-right tabular-nums">
+                          {group.seenCountries}/{group.totalCountries}
+                        </span>
+                      </div>
+                    </summary>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {group.entries.map((entry) => (
+                        <PlateCard
+                          key={entry.code}
+                          entry={entry}
+                          seen={isSeen(entry.code)}
+                          date={getSighting(entry.code)?.date}
+                          onClick={() => handleCardClick(entry)}
+                        />
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2">
+                {filteredAndSorted.map((entry) => (
+                  <PlateCard
+                    key={entry.code}
+                    entry={entry}
+                    seen={isSeen(entry.code)}
+                    date={getSighting(entry.code)?.date}
+                    onClick={() => handleCardClick(entry)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
